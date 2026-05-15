@@ -1,4 +1,4 @@
-# CoSGW: Co-clustering + Anchored Sliced Gromov-Wasserstein Demo
+# CoSGW: Co-clustering Sliced Gromov-Wasserstein Demo
 
 This repository contains a compact research demo for matching 3D point clouds with a two-stage pipeline:
 
@@ -7,7 +7,6 @@ This repository contains a compact research demo for matching 3D point clouds wi
 
 The code is organized to support both experimentation in a notebook and direct reuse from Python modules.
 
-![Example alignment](alignment_paper_final.png)
 
 ## Overview
 
@@ -15,7 +14,7 @@ The main workflow in this repo is:
 
 1. Sample two 3D point clouds from shape meshes.
 2. Run low-rank GW to obtain soft factors and hard co-cluster labels.
-3. Select one anchor per cluster, either by centroid or by medoid of the dominant connected component.
+3. Select one anchor per cluster.
 4. Compute an anchored 1D sliced coupling within each matched co-cluster block.
 5. Convert the coupling into hard matches and visualize the final alignment.
 
@@ -75,44 +74,6 @@ The notebook walks through:
 4. Building anchored sliced couplings.
 5. Producing hard correspondences and alignment plots.
 
-## Minimal Python example
-
-```python
-import numpy as np
-import ot
-
-from co_cluster import compute_lowrank_gw_coclusters
-from anchor_selection import compute_anchors
-from anchored_1d_wasserstein import anchored_sliced_gw_match, hard_match_from_coupling
-
-# X1 and X2 should be arrays of shape (n_points, d), with d >= 3
-X1 = np.random.randn(1000, 3)
-X2 = np.random.randn(1000, 3)
-
-rank = 8
-a = ot.unif(len(X1))
-b = ot.unif(len(X2))
-
-co_out = compute_lowrank_gw_coclusters(X1, X2, rank=rank, a=a, b=b)
-
-anchors_X = compute_anchors(X1, co_out["label1"], rank=rank, method="component_medoid")
-anchors_Y = compute_anchors(X2, co_out["label2"], rank=rank, method="component_medoid")
-
-match_out = anchored_sliced_gw_match(
-    X1=X1,
-    X2=X2,
-    label1=co_out["label1"],
-    label2=co_out["label2"],
-    anchors_X=anchors_X["anchors"],
-    anchors_Y=anchors_Y["anchors"],
-    rank=rank,
-    a=a,
-    b=b,
-)
-
-hard_match = hard_match_from_coupling(match_out["P_sliced_sparse"], direction="X1_to_X2")
-print(hard_match[:10])
-```
 
 ## Main API
 
@@ -141,27 +102,6 @@ print(hard_match[:10])
 - `plot_final_alignment(...)`
   Produces the final alignment figure used in the notebook.
 
-## Notes and assumptions
 
-- Point clouds are expected to have at least 3 coordinates per point.
-- Several visualization utilities normalize or flip coordinates for stable rendering.
-- The anchored matching step works on co-cluster blocks and can use either all anchors or only the local block anchor.
-- The implementation returns sparse couplings where possible to keep memory usage manageable.
 
-## Citation
 
-If this repository supports a paper, project report, or internal experiment, add the relevant citation here.
-
-For CAPOD data, please cite:
-
-```text
-Panagiotis Papadakis, "The Canonically Posed 3D Objects Dataset",
-Eurographics Workshop on 3D Object Retrieval (3DOR), 2014.
-```
-
-## Future improvements
-
-- Add an explicit `requirements.txt` or `environment.yml`.
-- Add a small script version of the notebook pipeline.
-- Add benchmark data download instructions.
-- Add unit tests for anchor selection and coupling assembly.
