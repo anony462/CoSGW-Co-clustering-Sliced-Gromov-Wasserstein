@@ -18,3 +18,10 @@ figures/
 *.ply
 *.stl
 alignment_paper_final.png
+!data/
+!data/CAPOD/
+!data/CAPOD/**
+!data/CAPOD/**/*.obj
+!data/CAPOD/**/*.png
+!data/CAPOD/README.txt
+!data/CAPOD/CAPOD.cla
